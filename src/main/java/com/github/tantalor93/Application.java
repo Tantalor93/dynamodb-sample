@@ -1,5 +1,7 @@
 package com.github.tantalor93;
 
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
@@ -28,7 +30,13 @@ public class Application implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		User user = userRepository.save(new User("1", "ondra", "benky"));
+		User user = userRepository.save(new User("1", "ondra", "benky", "mydata".getBytes()));
 		LOGGER.info("Saved '{}'", user);
+
+		Optional<User> byId = userRepository.findById("1");
+		LOGGER.info("Found '{}'", byId.get());
+
+		Optional<User> benky = userRepository.findByLastName("benky");
+		LOGGER.info("Found by last name '{}'", benky.get());
 	}
 }

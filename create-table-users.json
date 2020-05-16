@@ -1,0 +1,47 @@
+{
+  "TableName": "users",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "id",
+      "AttributeType": "S"
+    }, {
+      "AttributeName": "firstName",
+      "AttributeType": "S"
+    }, {
+      "AttributeName": "lastName",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "KeyType": "HASH",
+      "AttributeName": "id"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  },
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "LastNameIndex",
+      "Projection": {
+        "ProjectionType": "ALL"
+      },
+      "KeySchema": [
+        {
+          "KeyType": "HASH",
+          "AttributeName": "lastName"
+        },
+        {
+          "KeyType": "RANGE",
+          "AttributeName": "firstName"
+        }
+      ],
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 1,
+        "WriteCapacityUnits": 1
+      }
+    }
+  ]
+}
