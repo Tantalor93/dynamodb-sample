@@ -1,5 +1,6 @@
 package com.github.tantalor93;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -10,6 +11,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
+import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import com.github.tantalor93.entity.Dog;
 import com.github.tantalor93.entity.User;
 import com.github.tantalor93.repository.DogRepository;
@@ -26,6 +31,9 @@ public class Application implements CommandLineRunner {
 
 	@Autowired
 	private DogRepository dogRepository;
+
+	@Autowired
+	private DynamoDBMapper dynamoDBMapper;
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class);
@@ -47,5 +55,19 @@ public class Application implements CommandLineRunner {
 
 		Iterable<Dog> dogs = dogRepository.findAll();
 		System.out.println(dogs);
+
+		saveIfNotExists();
+	}
+
+	private void saveIfNotExists() {
+		User johny = new User("1", "johny", "praskac", "anotherdata".getBytes());
+		DynamoDBSaveExpression dynamoDBSaveExpression = new DynamoDBSaveExpression();
+		ExpectedAttributeValue expectedAttributeValue = new ExpectedAttributeValue(false);
+		dynamoDBSaveExpression.setExpected(Map.of("id", expectedAttributeValue));
+		try {
+			dynamoDBMapper.save(johny, dynamoDBSaveExpression);
+		} catch (ConditionalCheckFailedException ex) {
+			LOGGER.info("ID is not unique!");
+		}
 	}
 }
