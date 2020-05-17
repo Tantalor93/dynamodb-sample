@@ -1,0 +1,26 @@
+{
+  "TableName": "dogs",
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "name",
+      "AttributeType": "S"
+    }, {
+      "AttributeName": "ownerId",
+      "AttributeType": "S"
+    }
+  ],
+  "KeySchema": [
+    {
+      "KeyType": "HASH",
+      "AttributeName": "name"
+    },
+    {
+      "KeyType": "RANGE",
+      "AttributeName": "ownerId"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 1,
+    "WriteCapacityUnits": 1
+  }
+}
