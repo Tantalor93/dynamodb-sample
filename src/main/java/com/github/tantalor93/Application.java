@@ -1,5 +1,6 @@
 package com.github.tantalor93;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,10 +12,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
+import com.amazonaws.services.dynamodbv2.document.BatchWriteItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
+import com.amazonaws.services.dynamodbv2.model.WriteRequest;
 import com.github.tantalor93.entity.Dog;
 import com.github.tantalor93.entity.User;
 import com.github.tantalor93.repository.DogRepository;
@@ -34,6 +39,9 @@ public class Application implements CommandLineRunner {
 
 	@Autowired
 	private DynamoDBMapper dynamoDBMapper;
+
+	@Autowired
+	private AmazonDynamoDB amazonDynamoDB;
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class);
@@ -57,6 +65,29 @@ public class Application implements CommandLineRunner {
 		System.out.println(dogs);
 
 		saveIfNotExists();
+
+		batchWrite();
+	}
+
+	private void batchWrite() {
+		User ulan = new User("2", "ulan", "batar", "anotherdata".getBytes());
+		User opa = new User("3", "opa", "gangam", "anotherdata".getBytes());
+
+		DynamoDB dynamoDB = new DynamoDB(amazonDynamoDB);
+		List<DynamoDBMapper.FailedBatch> failedBatches = dynamoDBMapper.batchSave(ulan, opa);
+		for (DynamoDBMapper.FailedBatch failedBatch : failedBatches) {
+			Map<String, List<WriteRequest>> unprocessedItems = failedBatch.getUnprocessedItems();
+			do {
+				if (!unprocessedItems.isEmpty()) {
+					BatchWriteItemOutcome batchWriteItemOutcome = dynamoDB
+							.batchWriteItemUnprocessed(unprocessedItems);
+					unprocessedItems = batchWriteItemOutcome.getUnprocessedItems();
+				}
+			} while (!unprocessedItems.isEmpty());
+		}
+
+		Iterable<User> all = userRepository.findAll();
+		LOGGER.info("Found '{}' users", all);
 	}
 
 	private void saveIfNotExists() {
